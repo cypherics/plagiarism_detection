@@ -4,12 +4,10 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
-pattern_at_user = r"(@)user+|@"
 pattern_digits = r"\d+(nd|th|st)*"
 pattern_space = r"\s{2,}"
 pattern_special_chars = r"[^\w\s]|(_)+"
 pattern_url = r"(https|http)?:\/\/(\w|\.|\/|\?|\=|\&|\%)*\b"
-pattern_single_letter = r"\b[a-z]{1}\b"
 
 nltk.download("stopwords")
 nltk.download("punkt")
@@ -23,10 +21,8 @@ def case_conversion(text: string):
 
 def apply_regex(text: string):
     text = re.sub(pattern_url, "", text)
-    text = re.sub(pattern_at_user, "", text)
     text = re.sub(pattern_digits, "", text)
     text = re.sub(pattern_special_chars, " ", text)
-    text = re.sub(pattern_single_letter, "", text)
     text = re.sub(pattern_space, " ", text)
     return text
 
@@ -56,3 +52,7 @@ def text_normalization(text):
     tokenized_text = remove_stop_words(text)
     tokenized_text = lemmatization(tokenized_text)
     return tokenized_text
+
+
+def sentences_from_para(para):
+    return nltk.sent_tokenize(para)
