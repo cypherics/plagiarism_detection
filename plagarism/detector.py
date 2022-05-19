@@ -8,7 +8,7 @@ from plagarism.normalization import (
     case_conversion,
     apply_regex,
     remove_stop_words,
-    lemmatization,
+    lemmatize,
     sentences_from_para,
 )
 
@@ -64,7 +64,7 @@ class ExtrinsicDetector(Detector):
         text = case_conversion(data)
         text = apply_regex(text)
         tokenized_text = remove_stop_words(text)
-        tokenized_text = lemmatization(tokenized_text)
+        tokenized_text = lemmatize(tokenized_text)
         return tokenized_text
 
     def generate_embeddings(self):

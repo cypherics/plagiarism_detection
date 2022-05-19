@@ -38,7 +38,7 @@ def remove_stop_words(text: string):
     return words_filtered
 
 
-def lemmatization(text: string):
+def lemmatize(text: string):
     word_lemma = WordNetLemmatizer()
     _words = []
     for word in text:
@@ -50,7 +50,7 @@ def text_normalization(text):
     text = case_conversion(text)
     text = apply_regex(text)
     tokenized_text = remove_stop_words(text)
-    tokenized_text = lemmatization(tokenized_text)
+    tokenized_text = lemmatize(tokenized_text)
     return tokenized_text
 
 
