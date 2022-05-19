@@ -1,15 +1,17 @@
 from typing import Optional
 
-import pandas as pd
+from nltk import word_tokenize
 from sentence_transformers import SentenceTransformer
 
-from plagarism.constants import INPUT_COL, PARA_COL
-from plagarism.normalization import (
+from plagarism.constants import INPUT_COL
+from plagarism.util import (
     case_conversion,
     apply_regex,
     remove_stop_words,
     lemmatize,
     sentences_from_para,
+    remove_symbols_numbers_letters_consonants,
+    generate_para_df,
 )
 
 
@@ -34,21 +36,8 @@ class Detector:
     def generate_embeddings(self, **kwargs):
         raise NotImplementedError
 
-    def load_embedding_model(self, model_id: Optional[str] = None):
+    def load_embedding_model(self, model_id: Optional[str] = "all-MiniLM-L6-v2"):
         self.model = SentenceTransformer(model_id)
-
-    @staticmethod
-    def _generate_para_df(filepath):
-        para_content = list()
-        with open(filepath, "r") as rf:
-            _content = []
-            for line in rf:
-                if line == "\n":
-                    para_content.append(" ".join(_content))
-                    _content = []
-                else:
-                    _content.append(line.strip())
-        return pd.DataFrame(para_content, columns=[PARA_COL])
 
 
 class ExtrinsicDetector(Detector):
@@ -60,23 +49,28 @@ class ExtrinsicDetector(Detector):
         self._source_embeddings = []
         self._suspicious_embeddings = []
 
-    def pre_process_data(self, data):
-        text = case_conversion(data)
-        text = apply_regex(text)
-        tokenized_text = remove_stop_words(text)
-        tokenized_text = lemmatize(tokenized_text)
-        return tokenized_text
+    def pre_process_data(self, data: str):
+        tokenized_sentences = []
+        for sent in sentences_from_para(data):
+            text = case_conversion(sent)
+            text = apply_regex(text)
+
+            tokenized_text = word_tokenize(text)
+            tokenized_text = remove_symbols_numbers_letters_consonants(tokenized_text)
+            tokenized_text = remove_stop_words(tokenized_text)
+            tokenized_text = lemmatize(tokenized_text)
+            tokenized_sentences.append(" ".join(tokenized_text))
+        return tokenized_sentences
 
     def generate_embeddings(self):
         for _, row in self._source.iterrows():
-            for sent in sentences_from_para(row[INPUT_COL]):
-                normalize_text = self.pre_process_data(sent)
-                self._source_embeddings.append(self.model.encode(normalize_text))
+            tokenized_sentences = self.pre_process_data(row[INPUT_COL])
+            self._source_embeddings.extend(self.model.encode(tokenized_sentences))
 
     @classmethod
     def init_with_input_path(cls, source: str, suspicious: str):
-        source = cls._generate_para_df(source)
-        suspicious = cls._generate_para_df(suspicious)
+        source = generate_para_df(source)
+        suspicious = generate_para_df(suspicious)
         return cls(source, suspicious)
 
     def save(self, **kwargs):
