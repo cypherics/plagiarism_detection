@@ -1,13 +1,16 @@
-from typing import Optional, Tuple, Dict
+from typing import Optional, Tuple, Dict, List
 
 import hnswlib
 import numpy as np
 import pandas as pd
+import tensorflow_hub as hub
+
 from nltk import word_tokenize
 from sentence_transformers import SentenceTransformer, util
-from torch import Tensor
+from transformers import DebertaTokenizer, DebertaModel
 
 from plagarism.constants import INPUT_COL
+from plagarism.pipeline import Pipeline
 from plagarism.util import (
     case_conversion,
     apply_regex,
@@ -17,6 +20,55 @@ from plagarism.util import (
     remove_symbols_numbers_letters_consonants,
     generate_para_df,
 )
+
+
+class Model:
+    def __init__(self):
+        self._model = None
+
+    def init(self, model_id: Optional[str]):
+        raise NotImplementedError
+
+    def infer(self, **kwargs):
+        raise NotImplementedError
+
+
+class ST(Model):
+    def init(self, model_id: Optional[str]):
+        self._model = SentenceTransformer(model_id)
+
+    def infer(self, tokenized_sentences: List, **kwargs):
+        self._model.encode(tokenized_sentences)
+
+
+class TT(Model):
+    def __init__(self):
+        super().__init__()
+        self._tokenizer = None
+
+    def init(self, model_id: Optional[str] = "microsoft/deberta-base"):
+        self._tokenizer = DebertaTokenizer.from_pretrained(model_id)
+        self._model = DebertaModel.from_pretrained(model_id)
+
+    def infer(self, tokenized_sentences: List, **kwargs):
+        inputs = self._tokenizer(tokenized_sentences, return_tensors="pt")
+        return self._model(**inputs).last_hidden_state[0].detach().numpy().mean(axis=0)
+
+
+class UM(Model):
+    def init(
+        self,
+        model_id: Optional[
+            str
+        ] = "https://tfhub.dev/google/universal-sentence-encoder-large/5",
+    ):
+        # hub.KerasLayer(MD_PTH)
+        # URL = "https://tfhub.dev/google/universal-sentence-encoder/4"
+        # TRANSFORMER_MODEL = "https://tfhub.dev/google/universal-sentence-encoder-large/5"
+        self._model = hub.Module(model_id)
+
+    def infer(self, tokenized_sentences: List, **kwargs):
+        return self._model(tokenized_sentences)
 
 
 class NN:
@@ -100,8 +152,9 @@ class Detector:
     def generate_embeddings(self, **kwargs):
         raise NotImplementedError
 
-    def load_embedding_model(self, model_id: Optional[str] = "all-mpnet-base-v2"):
-        self.model = SentenceTransformer(model_id)
+    def load_embedding_model(self, model_id: Optional[str] = "TT"):
+        assert model_id in ["TT", "ST"]
+        self.model = TT() if model_id == "TT" else ST()
 
     def load_sim(self, nn: int = 10, **kwargs):
         self.sim = ANN(nn=nn, **kwargs)
@@ -145,7 +198,7 @@ class ExtrinsicDetector(Detector):
                 tokenized_sentences.append(" ".join(tokenized_text))
                 _ip_sent.append(sent)
 
-            _embeddings.extend(self.model.encode(tokenized_sentences))
+            _embeddings.extend(self.model.infer(tokenized_sentences))
         _sentences = dict(zip(list(range(len(_ip_sent))), _ip_sent))
 
         return np.array(_embeddings), _sentences
@@ -173,3 +226,13 @@ class ExtrinsicDetector(Detector):
 
     def generate_embedding_index(self, **kwargs):
         self.sim.init(embeddings=self._source_embeddings, **kwargs)
+
+
+class ExtrinsicPlagiarismPipeline(Pipeline):
+    def components(self, component: List):
+        for comp in component:
+            self.pipe_line_components.append(comp.init())
+
+    def execute(self, **data):
+        for comp in self.pipe_line_components:
+            data = comp.execute(**data)
