@@ -7,11 +7,12 @@ from plagarism.pipeline.extrinsic import (
     CollectSourceWithSuspicious,
     USE,
     NN,
+    Output,
 )
 
 arg = {
-    "source": r"C:\Users\Fuzail.Palnak\Downloads\pan-plagiarism-corpus-2009.part2\pan-plagiarism-corpus-2009\external-analysis-corpus\source-documents\part1\source-document00001.txt",
-    "suspicious": r"C:\Users\Fuzail.Palnak\Downloads\pan-plagiarism-corpus-2009.part3\pan-plagiarism-corpus-2009\external-analysis-corpus\suspicious-documents\part1\suspicious-document00001.txt",
+    "source": r"C:\Users\Fuzail.Palnak\Downloads\pan-plagiarism-corpus-2009\external-analysis-corpus\source-documents\part2\source-document02007.txt",
+    "suspicious": r"C:\Users\Fuzail.Palnak\Downloads\pan-plagiarism-corpus-2009.part2\pan-plagiarism-corpus-2009\external-analysis-corpus\suspicious-documents\part2\suspicious-document02007.txt",
 }
 e = ExtrinsicPlagiarismPipeline()
 e.components(
@@ -23,6 +24,7 @@ e.components(
         CollectSourceWithSuspicious,
         USE,
         NN,
+        Output,
     ]
 )
 e.execute(**arg)

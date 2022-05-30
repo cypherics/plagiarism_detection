@@ -1,3 +1,5 @@
+import csv
+
 import hnswlib
 import pandas as pd
 import tensorflow_hub as hub
@@ -36,8 +38,9 @@ class DataNormalization(PipelineComponent):
                 )
                 tokenized_text = remove_stop_words(tokenized_text)
                 tokenized_text = lemmatize(tokenized_text)
-                tokenized_sentences.append(" ".join(tokenized_text))
-                _ip_sent.append(sent)
+                if len(tokenized_text) >= 5:
+                    tokenized_sentences.append(" ".join(tokenized_text))
+                    _ip_sent.append(sent)
         _sentences = dict(zip(list(range(len(_ip_sent))), _ip_sent))
         return _sentences, tokenized_sentences
 
@@ -146,7 +149,31 @@ class NN(PipelineComponent):
 
         index.set_ef(ef)
         nn, distances = index.knn_query(query_emd, nn)
-        return {**{"detection": {"nn": nn, "score": 1-distances}}, **kwargs}
+        return {**{"detection": {"nn": nn, "score": 1 - distances}}, **kwargs}
+
+
+class Output(PipelineComponent):
+    def execute(self, **kwargs) -> dict:
+        distance_threshold = 0.20
+
+        nn = kwargs["detection"]["nn"]
+        score = kwargs["detection"]["score"]
+
+        source_sentences = kwargs["source_sentences"]
+        suspicious_sentences = kwargs["suspicious_sentences"]
+
+        header = ["suspicious", "plagarised from source", "score"]
+        with open("output.csv", "w", encoding="UTF8") as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+            for ix, neighbours in enumerate(nn):
+                for yx, neighbour in enumerate(neighbours):
+                    if score[ix][yx] < distance_threshold:
+                        continue
+                    writer.writerow(
+                        [suspicious_sentences[ix], source_sentences[yx], score[ix][yx]]
+                    )
+        return {**{"output": "output.csv"}, **kwargs}
 
 
 class ExtrinsicPlagiarismPipeline(Pipeline):
