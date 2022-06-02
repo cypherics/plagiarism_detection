@@ -6,8 +6,10 @@ from plagarism.pipeline.extrinsic import (
     SuspiciousDataNormalization,
     CollectSourceWithSuspicious,
     USE,
+    SE,
     NN,
     Output,
+    BertCase,
 )
 
 arg = {
@@ -22,7 +24,7 @@ e.components(
         SourceDataNormalization,
         SuspiciousDataNormalization,
         CollectSourceWithSuspicious,
-        USE,
+        SE,
         NN,
         Output,
     ]

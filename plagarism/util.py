@@ -1,5 +1,6 @@
+import string
 import re
-import string, re, nltk
+import nltk
 from typing import List
 
 import pandas as pd
@@ -13,11 +14,6 @@ pattern_space = r"\s{2,}"
 pattern_special_chars = r"[^\w\s]|(_)+"
 pattern_url = r"(https|http)?:\/\/(\w|\.|\/|\?|\=|\&|\%)*\b"
 
-nltk.download("stopwords")
-nltk.download("punkt")
-nltk.download("wordnet")
-nltk.download("omw-1.4")
-
 alphabets = "([A-Za-z])"
 prefixes = "(Mr|St|Mrs|Ms|Dr|Prof|Capt|Cpt|Lt|Mt)[.]"
 suffixes = "(Inc|Ltd|Jr|Sr|Co)"
@@ -25,6 +21,11 @@ starters = "(Mr|Mrs|Ms|Dr|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|Howeve
 acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
 websites = "[.](com|net|org|io|gov|me|edu)"
 digits = "([0-9])"
+
+nltk.download("stopwords")
+nltk.download("punkt")
+nltk.download("wordnet")
+nltk.download("omw-1.4")
 
 
 def split_into_sentences(text):
@@ -126,4 +127,4 @@ def lemmatize(word_token: List):
 
 
 def sentences_from_para(para):
-    return nltk.sent_tokenize(para)
+    return split_into_sentences(para)

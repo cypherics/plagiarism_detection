@@ -1,12 +1,14 @@
 import csv
 
 import hnswlib
+import numpy as np
 import pandas as pd
 import tensorflow_hub as hub
 
 from typing import Optional, List
 from nltk import word_tokenize
 from sentence_transformers import SentenceTransformer
+from transformers import BertTokenizer, BertModel
 
 from plagarism.constants import INPUT_COL
 from plagarism.pipeline.base import PipelineComponent, Pipeline
@@ -102,7 +104,7 @@ class USE(PipelineComponent):
         self,
         model_id: Optional[
             str
-        ] = "https://tfhub.dev/google/universal-sentence-encoder/4",
+        ] = "https://tfhub.dev/google/universal-sentence-encoder-large/5",
     ):
         # hub.KerasLayer(MD_PTH)
         # URL = "https://tfhub.dev/google/universal-sentence-encoder/4"
@@ -119,15 +121,38 @@ class USE(PipelineComponent):
 
 
 class SE(PipelineComponent):
-    def __init__(self, model_id: Optional[str]):
+    def __init__(self, model_id: Optional[str] = "all-MiniLM-L6-v2"):
         self._model = SentenceTransformer(model_id)
 
-    def execute(self, tokenize_sentences: List, **kwargs) -> dict:
+    def execute(self, **kwargs) -> dict:
         sentences = kwargs["sentences"]
 
         _embedding_collection = {}
         for key, value in sentences.items():
             _embedding_collection[f"{key}_embeddings"] = self._model.encode(value)
+        return {**{"embeddings": _embedding_collection}, **kwargs}
+
+
+class BertCase(PipelineComponent):
+    def __init__(self):
+        self._tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
+        self._model = BertModel.from_pretrained("bert-base-cased")
+
+    def execute(self, **kwargs) -> dict:
+        sentences = kwargs["sentences"]
+
+        _embedding_collection = {}
+        for key, value in sentences.items():
+            output_emd = []
+            for i in value:
+                encoded_input = self._tokenizer(i, return_tensors="pt")
+                output_emd.append(
+                    self._model(**encoded_input)["last_hidden_state"]
+                    .detach()
+                    .numpy()[0, -4:, :]
+                    .mean(axis=0)
+                )
+            _embedding_collection[f"{key}_embeddings"] = np.array(output_emd)
         return {**{"embeddings": _embedding_collection}, **kwargs}
 
 
