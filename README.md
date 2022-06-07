@@ -18,6 +18,13 @@
 
 3 - https://github.com/pan-webis-de/pan-code/tree/master/sepln09
 
+
+### [Intrinsic]
+1 - https://github.com/Coolcumber/inpladesys
+
+2 - https://github.com/mullerpeter/authorstyle/blob/master/authorstyle/features/stylometric_features.py
+
+
 ### [GENERATE GROUND TRUTH FROM XML]
 ```python
 import os
