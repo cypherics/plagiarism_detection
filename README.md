@@ -10,6 +10,18 @@
 
 4 - https://aclanthology.org/N16-1175.pdf
 
+5 - http://rochi.utcluj.ro/ijusi/articles/IJUSI-13-1-Rosu.pdf
+
+6 - https://pub.tik.ee.ethz.ch/students/2018-HS/BA-2018-19.pdf
+
+7 - https://www.fruct.org/publications/fruct25/files/Lag.pdf
+
+8 - https://www.researchgate.net/publication/303382784_Using_Stylometric_Features_for_Sentiment_Classification
+
+9 - http://ceur-ws.org/Vol-502/paper8.pdf
+
+10 - https://link.springer.com/content/pdf/10.1007%2Fs10579-010-9115-y.pdf
+
 ### [Evaluation]
 
 1 - https://pan.webis.de/sepln09/pan09-web/intrinsic-plagiarism-detection.html
