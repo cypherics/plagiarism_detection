@@ -28,3 +28,13 @@ class IndexingSourceDataPipeline(Pipeline):
         else:
             data = IndexSourceDataWithANN.init().execute(**data)
         return data
+
+
+class ExtrinsicPlagiarismPipeLineWithIndexedTFIDF(Pipeline):
+    def components(self, component: List):
+        for comp in component:
+            self.pipe_line_components.append(comp.init())
+
+    def execute(self, **data):
+        for comp in self.pipe_line_components:
+            data = comp.execute(**data)

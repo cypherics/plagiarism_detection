@@ -1,33 +1,23 @@
 from plagarism.pipeline.components.ext_components import (
-    ReadSourceData,
-    ReadSuspiciousData,
-    SourceDataNormalization,
     SuspiciousDataNormalization,
-    CollectSourceWithSuspicious,
+    ReadTfidfEmbeddings,
+    ReadVocab,
+    TFIDFForSuspicious,
     SE,
     NN,
-    Output,
+    Output, ReadSuspiciousData, IndexSourceDataWithANN,
 )
-from plagarism.pipeline.ext_pipeline import ExtrinsicPlagiarismPipeline
+from plagarism.pipeline.ext_pipeline import ExtrinsicPlagiarismPipeLineWithIndexedTFIDF, IndexingSourceDataPipeline
 
-arg = {
-    "source": r"C:\Users\Fuzail.Palnak\Downloads\pan-plagiarism-corpus-2009\external-analysis-corpus\source-documents\part2\source-document02007.txt",
-    "suspicious": r"C:\Users\Fuzail.Palnak\Downloads\pan-plagiarism-corpus-2009.part2\pan-plagiarism-corpus-2009\external-analysis-corpus\suspicious-documents\part2\suspicious-document02007.txt",
+# CREATE INDEX FOR GENERTAED EMBEDDING
+args = {
+    "tfidf_path": r"/home/emin/Fax/NLP/code/plagiarism_detection/plagiarism-detector/calculation_data/tfid_matrix.npz",
+    "index_path": r"home/emin/Fax/NLP/code/plagiarism_detection/plagiarism-detector/calculation_data/",
 }
-e = ExtrinsicPlagiarismPipeline()
-e.components(
-    [
-        ReadSourceData,
-        ReadSuspiciousData,
-        SourceDataNormalization,
-        SuspiciousDataNormalization,
-        CollectSourceWithSuspicious,
-        SE,
-        NN,
-        Output,
-    ]
-)
-e.execute(**arg)
+
+index_pipeline = IndexingSourceDataPipeline()
+index_pipeline.components([ReadTfidfEmbeddings, IndexSourceDataWithANN])
+index_pipeline.execute(**args)
 
 # class SemanticSim(NN):
 #     def __init__(self, nn: int = 10, **kwargs):

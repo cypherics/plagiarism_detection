@@ -1,14 +1,17 @@
 import csv
 import os.path
+import pickle
 
 import hnswlib
 import numpy as np
 import pandas as pd
+import scipy
 import tensorflow_hub as hub
 
 from typing import Optional, List
 from nltk import word_tokenize
 from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer, HashingVectorizer
 from transformers import BertTokenizer, BertModel
 
 from plagarism.constants import INPUT_COL
@@ -22,6 +25,27 @@ from plagarism.util import (
     generate_para_df,
     sentences_from_para,
 )
+
+
+class ReadTfidfEmbeddings(PipelineComponent):
+    def execute(self, **kwargs) -> dict:
+        _embedding_collection = {f"source_tokenize_sentences_embeddings": scipy.sparse.load_npz(kwargs["tfidf_path"])}
+        return {**{"embeddings": _embedding_collection}, **kwargs}
+
+
+class ReadVocab(PipelineComponent):
+    def execute(self, **kwargs) -> dict:
+        with open(kwargs["vocab_path"], "rb") as f:
+            vocab = pickle.load(f)
+        return {**{"vocab": vocab}, **kwargs}
+
+
+class TFIDFForSuspicious(PipelineComponent):
+    def execute(self, **kwargs) -> dict:
+        _embedding_collection = {}
+        vectorizer = HashingVectorizer(stop_words="english", n_features=20)
+        _embedding_collection[f"suspicious_embeddings"] = vectorizer.fit_transform([kwargs["suspicious_tokenize_sentences"]])
+        return {**{"embeddings": _embedding_collection}, **kwargs}
 
 
 class IndexSourceDataWithANN(PipelineComponent):
