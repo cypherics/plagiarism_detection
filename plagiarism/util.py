@@ -1,13 +1,13 @@
 import string
 import re
 import nltk
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
+from nltk import word_tokenize
 from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
 
-from plagarism.constants import PARA_COL
+from plagiarism.constants import PARA_COL, INPUT_COL
 
 pattern_digits = r"\d+(nd|th|st)*"
 pattern_space = r"\s{2,}"
@@ -73,7 +73,7 @@ def split_into_sentences(text):
 
 def generate_para_df(filepath):
     para_content = list()
-    with open(filepath, "r") as rf:
+    with open(filepath, "r", encoding="utf-8") as rf:
         _content = []
         for line in rf:
             if line == "\n":
@@ -118,13 +118,23 @@ def remove_stop_words(word_token: List):
     return words_filtered
 
 
-def lemmatize(word_token: List):
-    word_lemma = WordNetLemmatizer()
-    _words = []
-    for word in word_token:
-        _words.append(word_lemma.lemmatize(word))
-    return _words
-
-
 def sentences_from_para(para):
     return split_into_sentences(para)
+
+
+def normalize_data(data: str):
+    text = case_conversion(data)
+    text = apply_regex(text)
+
+    tokenized_text = word_tokenize(text)
+    tokenized_text = remove_symbols_numbers_letters_consonants(tokenized_text)
+    tokenized_text = remove_stop_words(tokenized_text)
+    return tokenized_text
+
+
+def get_sentences_from_df(data):
+    _ip_sent = []
+    for idx, row in data.iterrows():
+        for sent in sentences_from_para(row[INPUT_COL]):
+            _ip_sent.append(sent)
+    return _ip_sent
