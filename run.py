@@ -1,4 +1,5 @@
-from plagiarism.detector import Extrinsic
+from plagiarism.detector import Extrinsic, DocumentCollection
 
-e = Extrinsic()
+document = DocumentCollection()
+e = Extrinsic(document)
 e.generate_index("dataset/source.index")

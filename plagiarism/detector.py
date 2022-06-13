@@ -93,9 +93,9 @@ class Plagiarism:
 
 
 class Extrinsic(Plagiarism):
-    def __init__(self, model_id: Optional[str] = "all-MiniLM-L6-v2"):
+    def __init__(self, doc: DocumentCollection, model_id: Optional[str] = "all-MiniLM-L6-v2"):
         super().__init__(model_id)
-        self.doc = DocumentCollection()
+        self.doc = doc
 
     def generate_index(self, index_pth, ef_construction=400, m=64, ef=50):
         logger.debug("INDEX GENERATION")
