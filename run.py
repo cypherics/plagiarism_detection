@@ -1,16 +1,14 @@
-from plagarism.pipeline.extrinsic import (
-    ExtrinsicPlagiarismPipeline,
+from plagarism.pipeline.components.ext_components import (
     ReadSourceData,
     ReadSuspiciousData,
     SourceDataNormalization,
     SuspiciousDataNormalization,
     CollectSourceWithSuspicious,
-    USE,
     SE,
     NN,
     Output,
-    BertCase,
 )
+from plagarism.pipeline.ext_pipeline import ExtrinsicPlagiarismPipeline
 
 arg = {
     "source": r"C:\Users\Fuzail.Palnak\Downloads\pan-plagiarism-corpus-2009\external-analysis-corpus\source-documents\part2\source-document02007.txt",

@@ -1,4 +1,5 @@
 import csv
+import os.path
 
 import hnswlib
 import numpy as np
@@ -21,6 +22,33 @@ from plagarism.util import (
     generate_para_df,
     sentences_from_para,
 )
+
+
+class IndexSourceDataWithANN(PipelineComponent):
+    def execute(self, **kwargs) -> dict:
+        embeddings_collection = kwargs["embeddings"]
+
+        in_emd = embeddings_collection["source_tokenize_sentences_embeddings"]
+        source_idx = os.path.join(kwargs["index_path"], "source.index")
+        ef_construction = 400
+        m = 64
+        n, dim = in_emd.shape
+        index = hnswlib.Index(space="cosine", dim=dim)
+        index.init_index(max_elements=n, ef_construction=ef_construction, M=m)
+        index.add_items(in_emd, list(range(n)))
+
+        index.save_index(source_idx)
+        return {**{"index_path": source_idx}, **kwargs}
+
+
+class ReadSourceIndex(PipelineComponent):
+
+    def execute(self, **kwargs) -> dict:
+        source_idx = kwargs["index_path"]
+        index = hnswlib.Index(space="cosine", dim=kwargs["dim"])
+        index.load_index(source_idx)
+        index.set_ef(50)
+        return {**{"index": index}, **kwargs}
 
 
 class DataNormalization(PipelineComponent):
@@ -200,12 +228,3 @@ class Output(PipelineComponent):
                     )
         return {**{"output": "output.csv"}, **kwargs}
 
-
-class ExtrinsicPlagiarismPipeline(Pipeline):
-    def components(self, component: List):
-        for comp in component:
-            self.pipe_line_components.append(comp.init())
-
-    def execute(self, **data):
-        for comp in self.pipe_line_components:
-            data = comp.execute(**data)
