@@ -16,19 +16,8 @@ logger = logging.getLogger()
 
 class DocumentCollection:
     def __init__(self):
-        source_files = []
-        suspicious_files = []
-        for sub_dir in ALL_DIR:
-            for root, dirs, files in os.walk(sub_dir):
-                for file in files:
-                    if file.endswith(".txt"):
-                        if "source-document" in file:
-                            source_files.append(os.path.join(root, file))
-                        elif "suspicious-document" in file:
-                            suspicious_files.append(os.path.join(root, file))
-
-        self.source_df = self._sentences(source_files)
-        self.suspicious_df = self._sentences(suspicious_files)
+        self._df = None
+        self.collect_source()
 
     @staticmethod
     def _sentences(files):
@@ -44,11 +33,43 @@ class DocumentCollection:
         df["idx"] = range(0, len(df))
         return df
 
-    def get_source_sentences(self):
-        return self.source_df["sentences"].to_list()
+    def get_sentences(self):
+        return self._df["sentences"].to_list()
 
-    def get_suspicious_sentences(self):
-        return self.suspicious_df["sentences"].to_list()
+    def collect_source(self):
+        raise NotImplementedError
+
+
+class SourceDocumentCollection(DocumentCollection):
+    def __init__(self):
+        super().__init__()
+
+    def collect_source(self):
+        files_collection = list()
+        for sub_dir in ALL_DIR:
+            for root, dirs, files in os.walk(sub_dir):
+                for file in files:
+                    if file.endswith(".txt"):
+                        if "source-document" in file:
+                            files_collection.append(os.path.join(root, file))
+
+        self._df = self._sentences(files_collection)
+
+
+class SuspiciousDocumentCollection(DocumentCollection):
+    def __init__(self):
+        super().__init__()
+
+    def collect_source(self):
+        files_collection = list()
+        for sub_dir in ALL_DIR:
+            for root, dirs, files in os.walk(sub_dir):
+                for file in files:
+                    if file.endswith(".txt"):
+                        if "suspicious-document" in file:
+                            files_collection.append(os.path.join(root, file))
+
+        self._df = self._sentences(files_collection)
 
 
 class Plagiarism:
@@ -93,13 +114,19 @@ class Plagiarism:
 
 
 class Extrinsic(Plagiarism):
-    def __init__(self, doc: DocumentCollection, model_id: Optional[str] = "all-MiniLM-L6-v2"):
+    def __init__(
+        self,
+        source_doc: SourceDocumentCollection,
+        suspicious_doc: SuspiciousDocumentCollection,
+        model_id: Optional[str] = "all-MiniLM-L6-v2",
+    ):
         super().__init__(model_id)
-        self.doc = doc
+        self.source_doc = source_doc
+        self.suspicious_doc = suspicious_doc
 
     def generate_index(self, index_pth, ef_construction=400, m=64, ef=50):
         logger.debug("INDEX GENERATION")
-        source_sentences = self.doc.get_source_sentences()
+        source_sentences = self.source_doc.get_sentences()
         embeddings = self.sentence_embeddings(
             self.normalize_sentences(source_sentences)
         )
@@ -109,7 +136,7 @@ class Extrinsic(Plagiarism):
 
     def query(self, nn=10):
         logger.debug("QUERY IN PROGRESS")
-        suspicious_sentences = self.doc.get_suspicious_sentences()
+        suspicious_sentences = self.suspicious_doc.get_sentences()
         embeddings = self.sentence_embeddings(
             self.normalize_sentences(suspicious_sentences)
         )
