@@ -1,3 +1,4 @@
+import csv
 import logging
 import os
 from typing import Optional, List, Any
@@ -16,9 +17,11 @@ logger = logging.getLogger()
 
 
 class DocumentCollection:
-    def __init__(self):
+    def __init__(self, pth):
         self._df = None
-        self.collect_source()
+        self.pth = pth
+
+        self.collect()
 
     @staticmethod
     def _sentences(files):
@@ -28,8 +31,17 @@ class DocumentCollection:
             df1 = pd.DataFrame()
 
             sentences = get_sentences_from_df(generate_para_df(file))
-            df1["filename"] = [str(os.path.basename(file))] * len(sentences)
-            df1["sentences"] = sentences
+            tokenized_sentences = dict()
+
+            for j, sent in enumerate(sentences):
+                tokenized_text = normalize_data(sent)
+                if len(tokenized_text) >= 5:
+                    tokenized_sentences[sent] = " ".join(tokenized_text)
+
+            df1["filename"] = [str(os.path.basename(file))] * len(tokenized_sentences)
+            df1["sentences"] = list(tokenized_sentences.keys())
+            df1["normalised"] = list(tokenized_sentences.values())
+
             df = pd.concat([df, df1], ignore_index=True, sort=False)
         df["idx"] = range(0, len(df))
         return df
@@ -37,40 +49,58 @@ class DocumentCollection:
     def get_sentences(self):
         return self._df["sentences"].to_list()
 
-    def collect_source(self):
+    def get_normalised_sentences(self):
+        return self._df["normalised"].to_list()
+
+    def get_filename(self, idx):
+        return self._df.loc[self._df["idx"] == idx]["filename"].values[0]
+
+    def collect(self):
         raise NotImplementedError
 
 
 class SourceDocumentCollection(DocumentCollection):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, pth):
+        super().__init__(pth)
 
-    def collect_source(self):
-        files_collection = list()
-        for sub_dir in ALL_DIR:
-            for root, dirs, files in os.walk(sub_dir):
-                for file in files:
-                    if file.endswith(".txt"):
-                        if "source-document" in file:
-                            files_collection.append(os.path.join(root, file))
+    def collect(self):
+        if os.path.exists(self.pth):
+            logger.debug(f"READING FROM {self.pth}")
+            self._df = pd.read_csv(self.pth)
+        else:
+            files_collection = list()
+            for sub_dir in ALL_DIR:
+                for root, dirs, files in os.walk(sub_dir):
+                    for file in files:
+                        if file.endswith(".txt"):
+                            if "source-document" in file:
+                                files_collection.append(os.path.join(root, file))
 
-        self._df = self._sentences(files_collection)
+            self._df = self._sentences(files_collection)
+            logger.info(f"Saving Generated sentences at {self.pth}")
+            self._df.to_csv(self.pth)
 
 
 class SuspiciousDocumentCollection(DocumentCollection):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, pth):
+        super().__init__(pth)
 
-    def collect_source(self):
-        files_collection = list()
-        for sub_dir in ALL_DIR:
-            for root, dirs, files in os.walk(sub_dir):
-                for file in files:
-                    if file.endswith(".txt"):
-                        if "suspicious-document" in file:
-                            files_collection.append(os.path.join(root, file))
+    def collect(self):
+        if os.path.exists(self.pth):
+            logger.debug(f"READING FROM {self.pth}")
+            self._df = pd.read_csv(self.pth)
+        else:
+            files_collection = list()
+            for sub_dir in ALL_DIR:
+                for root, dirs, files in os.walk(sub_dir):
+                    for file in files:
+                        if file.endswith(".txt"):
+                            if "suspicious-document" in file:
+                                files_collection.append(os.path.join(root, file))
 
-        self._df = self._sentences(files_collection)
+            self._df = self._sentences(files_collection)
+            logger.info(f"Saving Generated sentences at {self.pth}")
+            self._df.to_csv(self.pth)
 
 
 class Plagiarism:
@@ -91,19 +121,13 @@ class Plagiarism:
         self._index.load_index(pth)
         self._index.set_ef(ef)
 
-    @staticmethod
-    def normalize_sentences(sentences):
-        tokenized_sentences = []
-        for sent in sentences:
-            tokenized_text = normalize_data(sent)
-            if len(tokenized_text) >= 5:
-                tokenized_sentences.append(" ".join(tokenized_text))
-        return tokenized_sentences
-
     def query(self, **kwargs):
         raise NotImplementedError
 
     def generate_index(self, **kwargs):
+        raise NotImplementedError
+
+    def save(self, **kwargs):
         raise NotImplementedError
 
 
@@ -136,7 +160,7 @@ class Extrinsic(Plagiarism):
         self,
         source_doc: SourceDocumentCollection,
         suspicious_doc: SuspiciousDocumentCollection,
-        approach: Any
+        approach,
     ):
         super().__init__()
         self.source_doc = source_doc
@@ -145,21 +169,45 @@ class Extrinsic(Plagiarism):
 
     def generate_index(self, index_pth, ef_construction=400, m=64, ef=50):
         logger.debug("INDEX GENERATION")
-        source_sentences = self.source_doc.get_sentences()
-        embeddings = self.approach.run(
-            self.normalize_sentences(source_sentences)
-        )
+        embeddings = self.approach.run(self.source_doc.get_normalised_sentences())
         self.index_embedding(
             embeddings, index_pth, ef_construction=ef_construction, m=m, ef=ef
         )
 
     def query(self, nn=10):
         logger.debug("QUERY IN PROGRESS")
-        suspicious_sentences = self.suspicious_doc.get_sentences()
-        embeddings = self.approach.run(
-            self.normalize_sentences(suspicious_sentences)
-        )
+        embeddings = self.approach.run(self.suspicious_doc.get_normalised_sentences())
 
         nn, distances = self._index.knn_query(embeddings, nn)
 
         return nn, 1 - distances
+
+    def save(self, pth, nn, score, distance_threshold=0.20):
+        header = [
+            "suspicious_filename",
+            "plagarised_filename",
+            "suspicious",
+            "plagarised",
+            "score",
+        ]
+
+        suspicious_sentences = self.suspicious_doc.get_sentences()
+        source_sentences = self.source_doc.get_sentences()
+
+        with open(os.path.join(pth, "output.csv"), "w", encoding="UTF-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+            for ix, neighbours in enumerate(nn):
+                for yx, neighbour in enumerate(neighbours):
+                    if score[ix][yx] < distance_threshold:
+                        continue
+
+                    writer.writerow(
+                        [
+                            self.suspicious_doc.get_filename(ix),
+                            self.source_doc.get_filename(yx),
+                            suspicious_sentences[ix],
+                            source_sentences[yx],
+                            score[ix][yx],
+                        ]
+                    )
