@@ -1,11 +1,12 @@
 import logging
 import os
-from typing import Optional, List
+from typing import Optional, List, Any
 
 import hnswlib
 import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import HashingVectorizer
 from tqdm import tqdm
 
 from plagiarism.constants import ALL_DIR
@@ -73,15 +74,8 @@ class SuspiciousDocumentCollection(DocumentCollection):
 
 
 class Plagiarism:
-    def __init__(self, model_id: Optional[str] = "all-MiniLM-L6-v2"):
+    def __init__(self):
         self._index = None
-        self._model = SentenceTransformer(model_id)
-
-    def sentence_embeddings(self, sentences: List):
-        _embeddings = list()
-        for sent in sentences:
-            _embeddings.append(self._model.encode(sent))
-        return np.array(_embeddings)
 
     def index_embedding(self, embeddings, pth, ef_construction=400, m=64, ef=50):
         n, dim = embeddings.shape
@@ -113,21 +107,46 @@ class Plagiarism:
         raise NotImplementedError
 
 
+class Approach:
+    def run(self, **kwargs):
+        raise NotImplementedError
+
+
+class SE(Approach):
+    def __init__(self, model_id: Optional[str] = "all-MiniLM-L6-v2"):
+        self._model = SentenceTransformer(model_id)
+
+    def run(self, sentences: List, **kwargs):
+        _embeddings = list()
+        for sent in sentences:
+            _embeddings.append(self._model.encode(sent))
+        return np.array(_embeddings)
+
+
+class TFIDFHashing(Approach):
+    def __init__(self, n_features=5):
+        self._model = HashingVectorizer(n_features=n_features)
+
+    def run(self, sentences: List, **kwargs):
+        return self._model.fit_transform(sentences).toarray()
+
+
 class Extrinsic(Plagiarism):
     def __init__(
         self,
         source_doc: SourceDocumentCollection,
         suspicious_doc: SuspiciousDocumentCollection,
-        model_id: Optional[str] = "all-MiniLM-L6-v2",
+        approach: Any
     ):
-        super().__init__(model_id)
+        super().__init__()
         self.source_doc = source_doc
         self.suspicious_doc = suspicious_doc
+        self.approach = approach
 
     def generate_index(self, index_pth, ef_construction=400, m=64, ef=50):
         logger.debug("INDEX GENERATION")
         source_sentences = self.source_doc.get_sentences()
-        embeddings = self.sentence_embeddings(
+        embeddings = self.approach.run(
             self.normalize_sentences(source_sentences)
         )
         self.index_embedding(
@@ -137,7 +156,7 @@ class Extrinsic(Plagiarism):
     def query(self, nn=10):
         logger.debug("QUERY IN PROGRESS")
         suspicious_sentences = self.suspicious_doc.get_sentences()
-        embeddings = self.sentence_embeddings(
+        embeddings = self.approach.run(
             self.normalize_sentences(suspicious_sentences)
         )
 
