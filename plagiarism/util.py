@@ -1,13 +1,14 @@
 import string
 import re
 import nltk
-from typing import List, Optional
+from typing import List
 
 import pandas as pd
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 
-from plagiarism.constants import PARA_COL, INPUT_COL
+INPUT_COL = "para"
+PARA_COL = "para"
 
 pattern_digits = r"\d+(nd|th|st)*"
 pattern_space = r"\s{2,}"
