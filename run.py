@@ -2,24 +2,27 @@ from plagiarism.detector import (
     Extrinsic,
     SourceDocumentCollection,
     SuspiciousDocumentCollection,
-    SE,
 )
-
-ALL_DIR = [
-    r"C:\Users\Fuzail.Palnak\PycharmProjects\crefts\plagiarism_detection\dataset\pan-plagiarism-corpus-2009",
-    r"C:\Users\Fuzail.Palnak\PycharmProjects\crefts\plagiarism_detection\dataset\pan-plagiarism-corpus-2009.part2",
-    r"C:\Users\Fuzail.Palnak\PycharmProjects\crefts\plagiarism_detection\dataset\pan-plagiarism-corpus-2009.part3",
-]
+from plagiarism.vectorizer import SE, TFIDFHashing
 
 source_doc = SourceDocumentCollection(
-    pth="dataset/source_sent.csv", dir_iter=ALL_DIR
+    pth="dataset/source_sent_all_three_subset.csv",
+    dir_iter=[
+        "dataset/subset/subset_1/sou_1",
+        "dataset/subset/subset_2/sou_2",
+        "dataset/subset/subset_3/sou_3",
+    ],
 ).extract_sentences()
 suspicious_doc = SuspiciousDocumentCollection(
-    pth="dataset/suspicious_sent.csv", dir_iter=ALL_DIR
-)
-vector_model = SE()
+    pth="dataset/suspicious_sent.csv", dir_iter=["dataset/subset/subset_1/sus_1"]
+).extract_sentences()
 
-e = Extrinsic(source_doc, suspicious_doc, vector_model)
-e.nn_index("dataset/source.index")
-# nn, score = e.query()
-# e.save("dataset", nn, score, distance_threshold=0.90)
+e = Extrinsic(source_doc, suspicious_doc, vector_model=SE())
+e.nn_index("dataset/output/se_index_subset_1_2_3.index")
+nn, score = e.query()
+e.save(
+    "dataset/output/set1/SE/se_output_subset_1_with_all_three_source.csv",
+    nn,
+    score,
+    distance_threshold=0.90,
+)

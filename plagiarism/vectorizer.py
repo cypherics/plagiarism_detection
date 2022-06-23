@@ -19,7 +19,7 @@ class SE(Vectorizer):
 
 
 class TFIDFHashing(Vectorizer):
-    def __init__(self, n_features=5):
+    def __init__(self, n_features=20):
         self._model = HashingVectorizer(n_features=n_features)
 
     def run(self, sentences: List, **kwargs):

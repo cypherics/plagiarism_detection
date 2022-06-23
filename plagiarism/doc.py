@@ -18,7 +18,7 @@ class DocumentCollection:
 
     @staticmethod
     def _sentences(files):
-        logger.debug("SENTENCE GENERATION")
+        logger.info("SENTENCE GENERATION")
         df = pd.DataFrame()
         for i, file in enumerate(tqdm(files)):
             df1 = pd.DataFrame()
@@ -40,13 +40,16 @@ class DocumentCollection:
         return df
 
     def get_sentences(self):
-        return self._df["sentences"].to_list()
+        return self._df["sentences"].to_numpy()
 
     def get_normalised_sentences(self):
-        return self._df["normalised"].to_list()
+        return self._df["normalised"].to_numpy()
 
     def get_filename(self, idx):
         return self._df.loc[self._df["idx"] == idx]["filename"].values[0]
+
+    def get_file_names(self):
+        return self._df["filename"].to_numpy()
 
     def extract_sentences(self):
         raise NotImplementedError
@@ -58,7 +61,7 @@ class SourceDocumentCollection(DocumentCollection):
 
     def extract_sentences(self):
         if os.path.exists(self.pth):
-            logger.debug(f"READING FROM {self.pth}")
+            logger.info(f"READING FROM {self.pth}")
             self._df = pd.read_csv(self.pth)
         else:
             files_collection = list()
@@ -81,7 +84,7 @@ class SuspiciousDocumentCollection(DocumentCollection):
 
     def extract_sentences(self):
         if os.path.exists(self.pth):
-            logger.debug(f"READING FROM {self.pth}")
+            logger.info(f"READING FROM {self.pth}")
             self._df = pd.read_csv(self.pth)
         else:
             files_collection = list()
