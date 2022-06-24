@@ -2,6 +2,7 @@ import logging
 import os
 from typing import List
 
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -39,20 +40,27 @@ class DocumentCollection:
         df["idx"] = range(0, len(df))
         return df
 
-    def get_sentences(self):
+    def get_sentences(self) -> np.ndarray:
         return self._df["sentences"].to_numpy()
 
-    def get_normalised_sentences(self):
+    def get_normalised_sentences(self) -> np.ndarray:
         return self._df["normalised"].to_numpy()
 
     def get_filename(self, idx):
         return self._df.loc[self._df["idx"] == idx]["filename"].values[0]
 
-    def get_file_names(self):
+    def get_file_names(self) -> np.ndarray:
         return self._df["filename"].to_numpy()
 
     def extract_sentences(self):
         raise NotImplementedError
+
+    def sentence_per_file_gen(self) -> np.ndarray:
+        _file_name = list(pd.unique(self.get_file_names()))
+        for file in tqdm(_file_name):
+            yield _file_name, self._df.loc[self._df["filename"] == file][
+                "normalised"
+            ].values
 
 
 class SourceDocumentCollection(DocumentCollection):

@@ -37,6 +37,37 @@
 2 - https://github.com/mullerpeter/authorstyle/blob/master/authorstyle/features/stylometric_features.py
 
 
+- ##### Features
+    
+    ```text
+    automated_readability_index
+    average_sentence_length_chars
+    average_sentence_length_words
+    average_syllables_per_word
+    average_word_frequency_class
+    average_word_length
+    coleman_liau_index
+    flesch_reading_ease
+    functionword_frequency
+    linsear_write_formula
+    most_common_words_without_stopwords
+    number_frequency
+    pos_tag_frequency
+    pos_tag_trigram_frequency
+    punctuation_frequency
+    sentence_length_distribution
+    sichel_s_metric
+    smog_index
+    special_character_frequency
+    stopword_ratio
+    top_3_gram_frequency
+    top_bigram_frequency
+    top_word_bigram_frequency
+    uppercase_frequency
+    word_length_distribution
+    yule_k_metric
+    ```
+
 ### [GENERATE GROUND TRUTH FROM XML]
 ```python
 import os

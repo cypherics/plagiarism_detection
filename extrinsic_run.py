@@ -19,10 +19,9 @@ suspicious_doc = SuspiciousDocumentCollection(
 
 e = Extrinsic(source_doc, suspicious_doc, vector_model=SE())
 e.nn_index("dataset/output/se_index_subset_1_2_3.index")
-nn, score = e.query()
+ex_op = e.query()
 e.save(
     "dataset/output/set1/SE/se_output_subset_1_with_all_three_source.csv",
-    nn,
-    score,
+    ex_op,
     distance_threshold=0.90,
 )
