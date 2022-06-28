@@ -35,7 +35,6 @@ class StyleEmbedding(Vectorizer):
         for feat in all_feature_functions():
             if feat.__name__ in features_to_use:
                 self._features_to_use.append(feat)
-        self._norm_func = MinMaxScaler()
 
     def run(self, sentences: List, **kwargs):
         tex = Text(" ".join(sentences))

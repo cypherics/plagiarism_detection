@@ -1,0 +1,49 @@
+extrinsic:
+  source:
+    dir:
+      - dataset/subset/subset_1/sou_1
+      - dataset/subset/subset_2/sou_2
+      - dataset/subset/subset_3/sou_3
+    pth: dataset/source_sent_all_three_subset.csv
+
+  suspicious:
+    dir:
+      - dataset/subset/subset_1/sus_1
+    pth: dataset/suspicious_sent.csv
+
+  index: dataset/output/se_index_subset_1_2_3.index
+  save: dataset/output/set1/SE/se_output_subset_1_with_all_three_source.csv
+
+intrinsic:
+  suspicious:
+    dir:
+      - dataset/pan-plagiarism-corpus-2009.part3/pan-plagiarism-corpus-2009/intrinsic-analysis-corpus/suspicious-documents
+      - dataset/pan-plagiarism-corpus-2009.part2/pan-plagiarism-corpus-2009/intrinsic-analysis-corpus/suspicious-documents
+      - dataset/pan-plagiarism-corpus-2009/intrinsic-analysis-corpus/suspicious-documents
+    pth: dataset/suspicious_sent_intrinsic.csv
+
+  save: dataset/output/intrinsic_output.csv
+
+  features:
+    - automated_readability_index
+    - average_sentence_length_chars
+    - average_sentence_length_words
+    - average_syllables_per_word
+    - average_word_frequency_class
+    - average_word_length
+    - coleman_liau_index
+    - flesch_reading_ease
+    - functionword_frequency
+    - linsear_write_formula
+    - most_common_words_without_stopwords
+    - number_frequency
+    - punctuation_frequency
+    - sentence_length_distribution
+    - special_character_frequency
+    - stopword_ratio
+    - top_3_gram_frequency
+    - top_bigram_frequency
+    - top_word_bigram_frequency
+    - uppercase_frequency
+    - word_length_distribution
+    - yule_k_metric

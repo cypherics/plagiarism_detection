@@ -6,9 +6,10 @@ from typing import Optional, Any, List
 import hnswlib
 import numpy as np
 import pandas as pd
-from sklearn.neighbors import LocalOutlierFactor
+from sentence_transformers.util import cos_sim
 
 from plagiarism.doc import SourceDocumentCollection, SuspiciousDocumentCollection
+from plagiarism.vectorizer import StyleEmbedding
 
 logger = logging.getLogger()
 
@@ -139,25 +140,39 @@ class Intrinsic(Plagiarism):
         self,
         suspicious_doc: Optional[SuspiciousDocumentCollection] = None,
         vector_model=None,
+        min_threshold: float = 0.60,
+        ignore_sentence_with_len: int = 500,
     ):
         super().__init__(None, suspicious_doc, vector_model)
         self._header = [
             "suspicious_filename",
             "plagarised",
         ]
-        self._lof = LocalOutlierFactor()
+        self._min_threshold = min_threshold
+        self._ignore_sentence_with_len = ignore_sentence_with_len
 
     def query(self, **kwargs):
         plagiarised_sent = []
         file_names = []
         logger.info("QUERYING DATA")
         for file_name, sentences in self.suspicious_doc.sentence_per_file_gen():
-            embeddings = self.approach.run(sentences)
-            plagiarised = list(
-                sentences[np.where(self._lof.fit_predict(embeddings) == -1)]
-            )
-            file_names.extend([file_name] * len(plagiarised))
-            plagiarised_sent.extend(plagiarised)
+            if len(sentences) < self._ignore_sentence_with_len:
+
+                embeddings = self.approach.run(sentences)
+                mean_embeddings = embeddings.mean(axis=0).reshape(1, -1)
+                cosine_scores = cos_sim(mean_embeddings, embeddings).numpy().flatten()
+
+                plagiarised = list(
+                    sentences[np.where(cosine_scores <= self._min_threshold)]
+                )
+
+                if len(plagiarised) > 0:
+                    file_names.extend([file_name] * len(plagiarised))
+                    plagiarised_sent.extend(plagiarised)
+                else:
+                    file_names.extend([file_name])
+                    plagiarised_sent.extend(["NONE"])
+
         return IntrinsicOutput(file_names, plagiarised_sent)
 
     def save(self, pth, intrinsic_output: IntrinsicOutput, **kwargs):
@@ -170,3 +185,43 @@ class Intrinsic(Plagiarism):
             ),
             columns=self._header,
         ).to_csv(pth)
+
+
+def extrinsic_plg(
+    source_doc_pth,
+    suspicious_doc_pth,
+    source_doc_dir: list,
+    suspicious_doc_dir: list,
+    index_pth: str,
+    save_pth: str,
+    vector_model,
+    distance_threshold: float = 0.90,
+):
+    source_doc = SourceDocumentCollection(
+        pth=source_doc_pth,
+        dir_iter=source_doc_dir,
+    ).extract_sentences()
+
+    suspicious_doc = SuspiciousDocumentCollection(
+        pth=suspicious_doc_pth, dir_iter=suspicious_doc_dir
+    ).extract_sentences()
+
+    ex = Extrinsic(source_doc, suspicious_doc, vector_model=vector_model)
+    ex.nn_index(index_pth)
+    ex_op = ex.query()
+    ex.save(
+        save_pth,
+        ex_op,
+        distance_threshold=distance_threshold,
+    )
+
+
+def intrinsic_plg(suspicious_pth: str, suspicious_dir: list, features: list):
+    suspicious_doc = SuspiciousDocumentCollection(
+        pth=suspicious_pth,
+        dir_iter=suspicious_dir,
+    ).extract_sentences()
+
+    ii = Intrinsic(suspicious_doc=suspicious_doc, vector_model=StyleEmbedding(features))
+    op = ii.query()
+    ii.save("intrinsic_output.csv", op)
