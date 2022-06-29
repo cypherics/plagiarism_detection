@@ -2,6 +2,7 @@ import fire
 from omegaconf import OmegaConf
 
 from plagiarism.detector import extrinsic_plg, intrinsic_plg
+from plagiarism.util import metric
 from plagiarism.vectorizer import TFIDFHashing, SE
 
 
@@ -40,6 +41,11 @@ def intrinsic(config):
         conf.intrinsic.suspicious.dir,
         conf.intrinsic.features,
     )
+
+
+def evaluation(config):
+    conf = OmegaConf.load(config)
+    print(metric(**conf.evaluation))
 
 
 if __name__ == "__main__":

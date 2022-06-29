@@ -47,3 +47,7 @@ intrinsic:
     - uppercase_frequency
     - word_length_distribution
     - yule_k_metric
+
+evaluation:
+  results: dataset/results.csv
+  ground_truth: dataset/ground_truth.csv

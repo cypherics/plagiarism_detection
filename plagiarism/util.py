@@ -6,6 +6,7 @@ from typing import List
 import pandas as pd
 from nltk import word_tokenize
 from nltk.corpus import stopwords
+from tqdm import tqdm
 
 INPUT_COL = "para"
 PARA_COL = "para"
@@ -139,3 +140,74 @@ def get_sentences_from_df(data):
         for sent in sentences_from_para(row[INPUT_COL]):
             _ip_sent.append(sent)
     return _ip_sent
+
+
+def evaluation_iterator(results: str, ground_truth: str):
+    gt_df = pd.read_csv(ground_truth)
+    output_df = pd.read_csv(results)
+    suspicious_reference = gt_df.loc[gt_df.loc[:, "name"] == "artificial-plagiarism"][
+        "suspicious_reference"
+    ].unique()
+    for i, sus in enumerate(tqdm(suspicious_reference)):
+        print(f"Loading: {i + 1}/{len(suspicious_reference)}")
+        temp_df = output_df.loc[
+            output_df.loc[:, "suspicious_filename"] == sus.replace(".xml", ".txt")
+        ]
+        temp_gt_df = gt_df.loc[gt_df.loc[:, "suspicious_reference"] == sus]
+        temp_gt_df = temp_gt_df.loc[
+            temp_gt_df.loc[:, "name"] == "artificial-plagiarism"
+        ]
+        suspicious_text = temp_df["suspicious"].unique()
+        suspicious_gt_text = "".join(temp_gt_df["suspicious_text"].to_list())
+
+        yield i, suspicious_text, suspicious_gt_text
+
+
+def jaccard_similarity(text1: str, text2: str):
+    set1 = set(text1)
+    set2 = set(text2)
+    return float(len(set1.intersection(set2)) / len(set1.union(set2)))
+
+
+def precision(results: str, ground_truth: str) -> List:
+    scores = []
+    for i, suspicious_text, suspicious_gt_text in evaluation_iterator(
+        results, ground_truth
+    ):
+        match_len = 0
+        for j, suspicious_sentence in enumerate(suspicious_text):
+            if suspicious_gt_text.find(suspicious_sentence.strip()) != -1:
+                match_len += len(suspicious_sentence.strip())
+
+        scores.append(match_len / len(suspicious_gt_text))
+
+    return scores
+
+
+def recall(results: str, ground_truth: str) -> List:
+    scores = []
+    for i, suspicious_text, suspicious_gt_text in evaluation_iterator(
+        results, ground_truth
+    ):
+        tp = 0
+        fn = 0
+        for j, suspicious_sentence in enumerate(suspicious_text):
+            if suspicious_gt_text.find(suspicious_sentence.strip()) != -1:
+                tp += 1
+            else:
+                fn += 1
+        if tp + fn == 0:
+            if len(suspicious_gt_text) == 0:
+                scores.append(1)
+            else:
+                scores.append(0)
+            continue
+        scores.append(tp / (tp + fn))
+    return scores
+
+
+def metric(results: str, ground_truth: str):
+    return {
+        "recall": recall(results, ground_truth),
+        "precision": precision(results, ground_truth),
+    }
