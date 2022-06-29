@@ -4,7 +4,7 @@ Code for detecting extrinsic and intrinsic plagiarism
 ```python
 pip install -r requirements.txt
 ```
-If you encounter an error `ImportError: cannot import name 'complexity' from 'cophi' (/home/palnak/.conda/envs/faiss-env/lib/python3.7/site-packages/cophi/__init__.py)`
+If you encounter an error `ImportError: cannot import name 'complexity' from 'cophi'`
 then run ` pip install cophi==1.2.3`
 
 ### Data format for Extrinsic
