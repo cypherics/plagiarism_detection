@@ -7,10 +7,6 @@ pip install -r requirements.txt
 If you encounter an error `ImportError: cannot import name 'complexity' from 'cophi'`
 then run ` pip install cophi==1.2.3`
 
-### Data format for Extrinsic
-.....
-### Data format for Intrinsic
-.....
 ### Config
 ```yaml
 extrinsic:
