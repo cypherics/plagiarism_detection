@@ -85,4 +85,4 @@ python extrinsic_se --config path/to/config.yaml
 ### Run Intrinsic
 ```python
 python intrinsic --config path/to/config.yaml
-`
+```
