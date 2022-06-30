@@ -12,7 +12,7 @@ Script to generate ground truth data for extrinsic can be downloaded from [here]
 pip install -r requirements.txt
 ```
 If you encounter `ImportError: cannot import name 'complexity' from 'cophi'`
-then run ` pip install cophi==1.2.3`
+then run `pip install cophi==1.2.3`
 
 ### Config
 ```yaml
