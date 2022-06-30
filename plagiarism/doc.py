@@ -10,7 +10,6 @@ from tqdm import tqdm
 from plagiarism.util import (
     get_sentences_from_df,
     generate_para_df,
-    normalize_data,
     extrinsic_normalize_data,
     intrinsic_normalize_data,
 )
