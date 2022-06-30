@@ -1,6 +1,5 @@
 import string
 import re
-import nltk
 from typing import List
 
 import pandas as pd
@@ -23,11 +22,6 @@ starters = "(Mr|Mrs|Ms|Dr|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|Howeve
 acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
 websites = "[.](com|net|org|io|gov|me|edu)"
 digits = "([0-9])"
-
-nltk.download("stopwords")
-nltk.download("punkt")
-nltk.download("wordnet")
-nltk.download("omw-1.4")
 
 
 def split_into_sentences(text):

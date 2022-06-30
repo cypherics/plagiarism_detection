@@ -31,22 +31,13 @@ intrinsic:
     - average_syllables_per_word
     - average_word_frequency_class
     - average_word_length
-    - coleman_liau_index
-    - flesch_reading_ease
-    - functionword_frequency
-    - linsear_write_formula
     - most_common_words_without_stopwords
-    - number_frequency
     - punctuation_frequency
     - sentence_length_distribution
     - special_character_frequency
     - stopword_ratio
-    - top_3_gram_frequency
-    - top_bigram_frequency
-    - top_word_bigram_frequency
     - uppercase_frequency
-    - word_length_distribution
-    - yule_k_metric
+    - pos_tag_frequency
 
 evaluation:
   results: dataset/results.csv

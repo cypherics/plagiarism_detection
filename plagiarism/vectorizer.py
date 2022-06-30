@@ -4,7 +4,6 @@ import numpy as np
 from authorstyle import get_feature_vector, all_feature_functions, Text
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import HashingVectorizer
-from sklearn.preprocessing import MinMaxScaler
 
 
 class Vectorizer:

@@ -1,10 +1,17 @@
 # Plagarism Detection 
 Code for detecting extrinsic and intrinsic plagiarism
+
+### Dataset
+
+Dataset used can be downloaded from - https://webis.de/data/pan-pc-09.html.
+The ground truth for extrinsic is available [here](https://github.com/cypherics/plagiarism_detection/releases/download/v0.0.1-alpha/extrinsic_ground_truth.zip) and for intrinsic it's available [here](https://github.com/cypherics/plagiarism_detection/releases/download/v0.0.1-alpha/intrinsic_ground_truth.zip) 
+
+Script to generate ground truth data for extrinsic can be downloaded from [here](https://github.com/cypherics/plagiarism_detection/releases/download/v0.0.1-alpha/generate_extrinsic_gt.py)
 ### Requirements
 ```python
 pip install -r requirements.txt
 ```
-If you encounter an error `ImportError: cannot import name 'complexity' from 'cophi'`
+If you encounter `ImportError: cannot import name 'complexity' from 'cophi'`
 then run ` pip install cophi==1.2.3`
 
 ### Config

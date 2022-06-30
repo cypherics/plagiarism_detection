@@ -7,3 +7,5 @@ tqdm == 4.64.0
 authorstyle==0.2
 cophi==1.2.3
 numpy
+fire==0.4.0
+omegaconf==2.2.2
