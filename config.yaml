@@ -1,33 +1,14 @@
-# Plagarism Detection 
-Code for detecting extrinsic and intrinsic plagiarism
-### Requirements
-```python
-pip install -r requirements.txt
-```
-If you encounter an error `ImportError: cannot import name 'complexity' from 'cophi'`
-then run ` pip install cophi==1.2.3`
-
-### Config
-```yaml
 extrinsic:
   source:
-    # dir where .txt files are stored for source
     dir:
       - dataset/subset/subset_1/sou_1
       - dataset/subset/subset_2/sou_2
       - dataset/subset/subset_3/sou_3
-      
-    # If pth is not present it will compute do the pre-proceissing 
-    # and save them so for next run its will skip the processing and used data from csv
     pth: dataset/source_sent_all_three_subset.csv
 
   suspicious:
-    # dir where .txt files are stored for source
     dir:
       - dataset/subset/subset_1/sus_1
-    
-    # If pth is not present it will compute do the pre-proceissing 
-    # and save them so for next run its will skip the processing and used data from csv
     pth: dataset/suspicious_sent.csv
 
   index: dataset/output/se_index_subset_1_2_3.index
@@ -35,17 +16,13 @@ extrinsic:
 
 intrinsic:
   suspicious:
-    # dir where .txt files are stored for source
     dir:
       - dataset/pan-plagiarism-corpus-2009.part3/pan-plagiarism-corpus-2009/intrinsic-analysis-corpus/suspicious-documents
       - dataset/pan-plagiarism-corpus-2009.part2/pan-plagiarism-corpus-2009/intrinsic-analysis-corpus/suspicious-documents
       - dataset/pan-plagiarism-corpus-2009/intrinsic-analysis-corpus/suspicious-documents
-    
-    # If pth is not present it will compute do the pre-proceissing 
-    # and save them so for next run its will skip the processing and used data from csv
-    pth: path/to/suspicious_sent_intrinsic.csv
+    pth: dataset/suspicious_sent_intrinsic.csv
 
-  save: path/to/save/intrinsic_output.csv
+  save: dataset/output/intrinsic_output.csv
 
   features:
     - automated_readability_index
@@ -72,24 +49,5 @@ intrinsic:
     - yule_k_metric
 
 evaluation:
-  results: path/where/results.csv
-  ground_truth: path/where/ground_truth.csv
-```
-### Run Extrinsic
-```python
-# USING TFIDF FOR FEATURES
-python extrinsic_tfidf --config path/to/config.yaml
-
-# USING DISTILL_BERT FOR FEATURES
-python extrinsic_se --config path/to/config.yaml
-```
-
-### Run Intrinsic
-```python
-python intrinsic --config path/to/config.yaml
-```
-
-### Evaluate
-```python
-python evaluation --config path/to/config.yaml
-```
+  results: dataset/results.csv
+  ground_truth: dataset/ground_truth.csv
