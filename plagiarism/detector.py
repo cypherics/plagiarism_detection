@@ -33,10 +33,8 @@ class IntrinsicOutput:
 class Plagiarism:
     def __init__(
         self,
-        source_doc: Optional[ExSourceDocumentCollection] = None,
-        suspicious_doc: Optional[
-            ExSuspiciousDocumentCollection, InSuspiciousDocumentCollection
-        ] = None,
+        source_doc=None,
+        suspicious_doc=None,
         approach=None,
     ):
 
