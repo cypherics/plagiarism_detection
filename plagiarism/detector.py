@@ -140,7 +140,7 @@ class Intrinsic(Plagiarism):
         self,
         suspicious_doc: Optional[SuspiciousDocumentCollection] = None,
         vector_model=None,
-        min_threshold: float = 0.60,
+        min_threshold: float = 0.85,
         ignore_sentence_with_len: int = 500,
     ):
         super().__init__(None, suspicious_doc, vector_model)
@@ -155,10 +155,14 @@ class Intrinsic(Plagiarism):
         plagiarised_sent = []
         file_names = []
         logger.info("QUERYING DATA")
-        for file_name, sentences in self.suspicious_doc.sentence_per_file_gen():
-            if len(sentences) < self._ignore_sentence_with_len:
+        for (
+            file_name,
+            normalised_sentences,
+            sentences,
+        ) in self.suspicious_doc.sentence_per_file_gen():
+            if len(normalised_sentences) < self._ignore_sentence_with_len:
 
-                embeddings = self.approach.run(sentences)
+                embeddings = self.approach.run(normalised_sentences)
                 mean_embeddings = embeddings.mean(axis=0).reshape(1, -1)
                 cosine_scores = cos_sim(mean_embeddings, embeddings).numpy().flatten()
 
@@ -216,7 +220,9 @@ def extrinsic_plg(
     )
 
 
-def intrinsic_plg(suspicious_pth: str, suspicious_dir: list, features: list):
+def intrinsic_plg(
+    suspicious_pth: str, suspicious_dir: list, features: list, save_pth: str
+):
     suspicious_doc = SuspiciousDocumentCollection(
         pth=suspicious_pth,
         dir_iter=suspicious_dir,
@@ -224,4 +230,4 @@ def intrinsic_plg(suspicious_pth: str, suspicious_dir: list, features: list):
 
     ii = Intrinsic(suspicious_doc=suspicious_doc, vector_model=StyleEmbedding(features))
     op = ii.query()
-    ii.save("intrinsic_output.csv", op)
+    ii.save(save_pth, op)

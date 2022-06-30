@@ -58,9 +58,9 @@ class DocumentCollection:
     def sentence_per_file_gen(self) -> np.ndarray:
         _file_name = list(pd.unique(self.get_file_names()))
         for file in tqdm(_file_name):
-            yield _file_name, self._df.loc[self._df["filename"] == file][
+            yield file, self._df.loc[self._df["filename"] == file][
                 "normalised"
-            ].values
+            ].values, self._df.loc[self._df["filename"] == file]["sentences"].values
 
 
 class SourceDocumentCollection(DocumentCollection):

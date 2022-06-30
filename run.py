@@ -40,6 +40,7 @@ def intrinsic(config):
         conf.intrinsic.suspicious.pth,
         conf.intrinsic.suspicious.dir,
         conf.intrinsic.features,
+        conf.intrinsic.save,
     )
 
 
