@@ -8,7 +8,11 @@ import numpy as np
 import pandas as pd
 from sentence_transformers.util import cos_sim
 
-from plagiarism.doc import SourceDocumentCollection, SuspiciousDocumentCollection
+from plagiarism.doc import (
+    ExSourceDocumentCollection,
+    ExSuspiciousDocumentCollection,
+    InSuspiciousDocumentCollection,
+)
 from plagiarism.vectorizer import StyleEmbedding
 
 logger = logging.getLogger()
@@ -29,8 +33,10 @@ class IntrinsicOutput:
 class Plagiarism:
     def __init__(
         self,
-        source_doc: Optional[SourceDocumentCollection] = None,
-        suspicious_doc: Optional[SuspiciousDocumentCollection] = None,
+        source_doc: Optional[ExSourceDocumentCollection] = None,
+        suspicious_doc: Optional[
+            ExSuspiciousDocumentCollection, InSuspiciousDocumentCollection
+        ] = None,
         approach=None,
     ):
 
@@ -50,8 +56,8 @@ class Plagiarism:
 class Extrinsic(Plagiarism):
     def __init__(
         self,
-        source_doc: Optional[SourceDocumentCollection] = None,
-        suspicious_doc: Optional[SuspiciousDocumentCollection] = None,
+        source_doc: Optional[ExSourceDocumentCollection] = None,
+        suspicious_doc: Optional[ExSuspiciousDocumentCollection] = None,
         vector_model=None,
     ):
         super().__init__(source_doc, suspicious_doc, vector_model)
@@ -138,7 +144,7 @@ class Extrinsic(Plagiarism):
 class Intrinsic(Plagiarism):
     def __init__(
         self,
-        suspicious_doc: Optional[SuspiciousDocumentCollection] = None,
+        suspicious_doc: Optional[InSuspiciousDocumentCollection] = None,
         vector_model=None,
         min_threshold: float = 0.85,
         ignore_sentence_with_len: int = 500,
@@ -201,12 +207,12 @@ def extrinsic_plg(
     vector_model,
     distance_threshold: float = 0.90,
 ):
-    source_doc = SourceDocumentCollection(
+    source_doc = ExSourceDocumentCollection(
         pth=source_doc_pth,
         dir_iter=source_doc_dir,
     ).extract_sentences()
 
-    suspicious_doc = SuspiciousDocumentCollection(
+    suspicious_doc = ExSuspiciousDocumentCollection(
         pth=suspicious_doc_pth, dir_iter=suspicious_doc_dir
     ).extract_sentences()
 
@@ -223,7 +229,7 @@ def extrinsic_plg(
 def intrinsic_plg(
     suspicious_pth: str, suspicious_dir: list, features: list, save_pth: str
 ):
-    suspicious_doc = SuspiciousDocumentCollection(
+    suspicious_doc = InSuspiciousDocumentCollection(
         pth=suspicious_pth,
         dir_iter=suspicious_dir,
     ).extract_sentences()

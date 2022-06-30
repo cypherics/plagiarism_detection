@@ -4,9 +4,16 @@ from typing import List
 
 import numpy as np
 import pandas as pd
+from nltk import TreebankWordDetokenizer
 from tqdm import tqdm
 
-from plagiarism.util import get_sentences_from_df, generate_para_df, normalize_data
+from plagiarism.util import (
+    get_sentences_from_df,
+    generate_para_df,
+    normalize_data,
+    extrinsic_normalize_data,
+    intrinsic_normalize_data,
+)
 
 logger = logging.getLogger()
 
@@ -17,8 +24,7 @@ class DocumentCollection:
         self.pth = pth
         self.dir_iter = dir_iter
 
-    @staticmethod
-    def _sentences(files):
+    def _sentences(self, files):
         logger.info("SENTENCE GENERATION")
         df = pd.DataFrame()
         for i, file in enumerate(tqdm(files)):
@@ -28,9 +34,11 @@ class DocumentCollection:
             tokenized_sentences = dict()
 
             for j, sent in enumerate(sentences):
-                tokenized_text = normalize_data(sent)
+                tokenized_text = self.normalize_data(sent)
                 if len(tokenized_text) >= 5:
-                    tokenized_sentences[sent] = " ".join(tokenized_text)
+                    tokenized_sentences[sent] = TreebankWordDetokenizer().detokenize(
+                        tokenized_text
+                    )
 
             df1["filename"] = [str(os.path.basename(file))] * len(tokenized_sentences)
             df1["sentences"] = list(tokenized_sentences.keys())
@@ -62,8 +70,11 @@ class DocumentCollection:
                 "normalised"
             ].values, self._df.loc[self._df["filename"] == file]["sentences"].values
 
+    def normalize_data(self, text, **kwargs):
+        raise NotImplementedError
 
-class SourceDocumentCollection(DocumentCollection):
+
+class ExSourceDocumentCollection(DocumentCollection):
     def __init__(self, pth, dir_iter: List):
         super().__init__(pth, dir_iter)
 
@@ -85,8 +96,11 @@ class SourceDocumentCollection(DocumentCollection):
             self._df.to_csv(self.pth)
         return self
 
+    def normalize_data(self, text, **kwargs):
+        return extrinsic_normalize_data(text)
 
-class SuspiciousDocumentCollection(DocumentCollection):
+
+class ExSuspiciousDocumentCollection(DocumentCollection):
     def __init__(self, pth, dir_iter: List):
         super().__init__(pth, dir_iter)
 
@@ -107,3 +121,14 @@ class SuspiciousDocumentCollection(DocumentCollection):
             logger.info(f"Saving Generated sentences at {self.pth}")
             self._df.to_csv(self.pth)
         return self
+
+    def normalize_data(self, text, **kwargs):
+        return extrinsic_normalize_data(text)
+
+
+class InSuspiciousDocumentCollection(ExSuspiciousDocumentCollection):
+    def __init__(self, pth, dir_iter: List):
+        super().__init__(pth, dir_iter)
+
+    def normalize_data(self, text, **kwargs):
+        return intrinsic_normalize_data(text)

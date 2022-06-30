@@ -128,6 +128,21 @@ def normalize_data(data: str):
     return tokenized_text
 
 
+def extrinsic_normalize_data(text: str):
+    text = case_conversion(text)
+    text = apply_regex(text)
+
+    tokenized_text = word_tokenize(text)
+    tokenized_text = remove_symbols_numbers_letters_consonants(tokenized_text)
+    tokenized_text = remove_stop_words(tokenized_text)
+    return tokenized_text
+
+
+def intrinsic_normalize_data(text: str):
+    text = re.sub(pattern_url, "", text)
+    return word_tokenize(text)
+
+
 def get_sentences_from_df(data):
     _ip_sent = []
     for idx, row in data.iterrows():

@@ -20,7 +20,7 @@ intrinsic:
       - dataset/pan-plagiarism-corpus-2009.part3/pan-plagiarism-corpus-2009/intrinsic-analysis-corpus/suspicious-documents
       - dataset/pan-plagiarism-corpus-2009.part2/pan-plagiarism-corpus-2009/intrinsic-analysis-corpus/suspicious-documents
       - dataset/pan-plagiarism-corpus-2009/intrinsic-analysis-corpus/suspicious-documents
-    pth: dataset/suspicious_sent_intrinsic.csv
+    pth: dataset/suspicious_sent_intrinsic_1.csv
 
   save: dataset/output/intrinsic_output.csv
 
